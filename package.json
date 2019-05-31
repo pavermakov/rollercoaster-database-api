@@ -1,0 +1,17 @@
+{
+  "name": "roller-coaster-database",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless-offline": "^4.10.6"
+  },
+  "dependencies": {
+    "jsdom": "15.1.0"
+  }
+}

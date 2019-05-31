@@ -1,0 +1,33 @@
+service: roller-coaster-database # NOTE: update this with your service name
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+
+stage: dev
+region: eu-north-1
+
+functions:
+  random:
+    handler: handler.random
+    events:
+      - http:
+          path: /random
+          method: get
+
+  latest:
+    handler: handler.latest
+    events:
+      - http:
+          path: /latest
+          method: get
+
+  videos:
+    handler: handler.videos
+    events:
+      - http:
+          path: /videos
+          method: get
+
+plugins:
+  - serverless-offline
