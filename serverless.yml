@@ -29,5 +29,12 @@ functions:
           path: /videos
           method: get
 
+  search:
+    handler: handler.search
+    events:
+      - http:
+          path: /search
+          method: get
+
 plugins:
   - serverless-offline

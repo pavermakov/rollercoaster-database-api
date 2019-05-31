@@ -4,7 +4,7 @@ const { extractId, extractBackgroundUrl } = require('./helpers');
 
 const { JSDOM } = jsdom;
 const URL = 'https://rcdb.com';
-
+const URL_SEARCH = 'https://rcdb.com/qs.htm?qs=';
 
 module.exports.random = () => {
   return new Promise((resolve) => {
@@ -144,5 +144,45 @@ module.exports.videos = () => {
 };
 
 module.exports.search = (event) => {
+  const url = `${URL_SEARCH}${event.queryStringParameters.query}`;
 
+  return new Promise((resolve) => {
+    JSDOM.fromURL(url, { runScripts: 'dangerously', resources: 'usable' })
+      .then((dom) => {
+        setTimeout(() => {
+          const { document } = dom.window;
+          const results = document.querySelectorAll('section:first-of-type p') || [];
+          const data = [];
+
+          for (let elem of results) {
+            const rideElem = elem.querySelector('a:first-child');
+            const rideName = rideElem.innerHTML;
+            const rideId = extractId(rideElem.attributes.href.value);
+
+            const parkElem = elem.querySelector('a:last-child');
+            const parkName = parkElem.innerHTML;
+            const parkId = extractId(parkElem.attributes.href.value);
+
+            const location = parkElem.nextSibling.textContent.slice(2, -1);
+
+            data.push({ rideId, rideName, parkId, parkName, location });
+          }
+
+          resolve({
+            statusCode: 200,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+        }, 0);
+      })
+      .catch((error) => {
+        const response = {
+          statusCode: 500,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ error })
+        };
+
+        resolve(response);
+      });
+  });
 };
