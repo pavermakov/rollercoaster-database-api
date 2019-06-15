@@ -36,5 +36,16 @@ functions:
           path: /search
           method: get
 
+  ride:
+    handler: handler.ride
+    events:
+      - http:
+          path: /ride/{id}
+          method: get
+          request:
+            parameters:
+              paths:
+                id: true
+
 plugins:
   - serverless-offline
