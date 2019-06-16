@@ -47,5 +47,16 @@ functions:
               paths:
                 id: true
 
+  park:
+    handler: handler.park
+    events:
+      - http:
+          path: /park/{id}
+          method: get
+          request:
+            parameters:
+              paths:
+                id: true
+
 plugins:
   - serverless-offline
