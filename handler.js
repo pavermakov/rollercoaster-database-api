@@ -301,3 +301,156 @@ module.exports.ride = (event) => {
       });
   });
 };
+
+module.exports.park = (event) => {
+  const url = `${URL}/${event.pathParameters.id}.htm`;
+
+  return new Promise((resolve) => {
+    JSDOM.fromURL(url, { runScripts: 'dangerously', resources: 'usable' })
+      .then((dom) => {
+        setTimeout(() => {
+          const { document } = dom.window;
+          const feature = document.querySelector('#feature');
+          const article = document.querySelector('#article');
+          const data = {};
+
+          // get park name
+          const header = feature.querySelector('h1');
+          data.name = header.textContent;
+
+          // get park location
+          let location = `${header.nextSibling.textContent}`;
+          const locationElem = feature.querySelectorAll('h1 ~ a') || [];
+
+          locationElem.forEach((elem) => {
+            location += `, ${elem.textContent}`;
+          });
+
+          data.location = location;
+
+          // get opening date
+          const timeElem = feature.querySelector('time');
+
+          if (timeElem) {
+            data.opened = timeElem.attributes.datetime.value;
+          }
+
+          // get phone
+          let phoneSentence =  feature.querySelector('br + br').nextSibling.textContent;
+          const phone = phoneSentence.split(': ')[1];
+
+          data.phone = phone;
+
+          // add socials
+          const socials = {};
+          const socialElements = feature.querySelectorAll('#media_row > .bkg');
+
+          socialElements.forEach((elem) => {
+            const url = elem.attributes.href.value;
+
+            if (url.includes('facebook')) {
+              return socials.facebook = url;
+            }
+
+            if (url.includes('twitter')) {
+              return socials.twitter = url;
+            }
+
+            if (url.includes('instagram')) {
+              return socials.instagram = url;
+            }
+
+            if (url.includes('youtube')) {
+              return socials.youtube = url;
+            }
+
+            return socials.website = url;
+          });
+
+          data.socials = socials;
+
+          // add images
+          data.images = [...Array.from(document.querySelectorAll('#pic_data > div')).map(elem => `${URL}${elem.dataset.url}`)];
+
+          // add rides
+          const rides = {};
+
+          // add operating rollercoasters
+          const operating = [];
+          let rows = article.querySelectorAll('section:nth-child(2) tbody > tr') || [];
+
+          rows.forEach((row) => {
+            const columns = row.querySelectorAll('td') || [];
+
+            if (columns.length === 0) {
+              return;
+            }
+
+            const id = extractId(columns[1].querySelector('a').attributes.href.value);
+            const name = columns[1].textContent;
+            const type = columns[2].textContent;
+            const design = columns[3].textContent;
+            const scale = columns[4].textContent;
+            const opened = columns[5].textContent;
+            const closed = (columns[6] || {}).textContent;
+
+            operating.push({ id, name, type, design, scale, opened, closed });
+          });
+
+          if (operating.length > 0) {
+            rides.operating = operating;
+          }
+
+          // add defunct rides
+          const defunct = [];
+          rows = article.querySelectorAll('section:nth-child(3) tbody > tr') || [];
+
+          rows.forEach((row) => {
+            const columns = row.querySelectorAll('td') || [];
+
+            if (columns.length === 0) {
+              return;
+            }
+
+            const id = extractId(columns[1].querySelector('a').attributes.href.value);
+            const name = columns[1].textContent;
+            const type = columns[2].textContent;
+            const design = columns[3].textContent;
+            const scale = columns[4].textContent;
+            const opened = columns[5].textContent;
+            const closed = (columns[6] || {}).textContent;
+
+            defunct.push({ id, name, type, design, scale, opened, closed });
+          });
+
+          if (defunct.length > 0) {
+            rides.defunct = defunct;
+          }
+
+          data.rides = rides;
+
+          // add notes
+          const notes = document.querySelector('.sec > div');
+
+          if (notes) {
+            data.notes = notes.textContent;
+          }
+
+          resolve({
+            statusCode: 200,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+        }, 0);
+      })
+      .catch((error) => {
+        const response = {
+          statusCode: 500,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ error })
+        };
+
+        resolve(response);
+      });
+  });
+};
