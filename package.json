@@ -12,6 +12,6 @@
     "serverless-offline": "^4.10.6"
   },
   "dependencies": {
-    "jsdom": "15.1.0"
+    "jsdom": "16.5.0"
   }
 }
